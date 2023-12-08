@@ -1,0 +1,54 @@
+environment:
+  iam_profile_name:
+  region_name: us-east-1
+  iam_role:
+  s3_bucket:
+  s3_base_prefix: musinsaigo
+  s3_dataset_prefix: dataset
+  s3_images_prefix: images
+  s3_models_prefix: models
+  unsplash_api_key:
+  hf_token:
+  wandb_api_key:
+
+data:
+  data_source: musinsa
+  num_images: 2000
+  data_query: fashion person
+  is_street_snap: True
+  order_method:
+  is_best: True
+  caption_prompt: Can you describe the person (people) in the center of the photo, focusing on fashion?
+  prompt_prefix:
+  prompt_suffix:
+  outpaint_images: True
+  outpaint_prompt: a photo of a person (people)
+
+model:
+  ecr_data_prep_repo: musinsaigo-data-prep
+  ecr_model_train_repo: musinsaigo-model-train
+  sm_model_data:
+  sm_caption_instance_type: ml.g4dn.12xlarge
+  sm_outpaint_instance_type: ml.g4dn.2xlarge
+  sm_train_instance_type: ml.g5.2xlarge
+  sm_infer_instance_type: ml.g4dn.2xlarge
+  use_multi_gpus: False
+  use_sdxl: True
+  use_dreambooth: False
+  num_train_epochs:
+  resolution: 1024
+  subject_name: musiansa
+  class_name: fashion street snap
+  center_crop: False
+  random_flip: True
+  train_text_encoder: True
+  batch_size: 1
+  max_train_steps: 5000
+  learning_rate: 1e-05
+  lr_scheduler: constant
+  checkpointing_steps: 500
+  push_to_hub: False
+  hf_model_id:
+  reduce_memory_usage: True
+  validation_prompt: a photo of a woman wearing a white t-shirt and jeans
+  sm_endpoint_name: musinsaigo
