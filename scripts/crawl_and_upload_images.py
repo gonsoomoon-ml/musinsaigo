@@ -1,5 +1,6 @@
 import glob
 import os
+import sys
 import time
 from typing import Final, Optional
 from urllib.error import HTTPError
@@ -10,13 +11,17 @@ from pyunsplash import PyUnsplash
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from tqdm import tqdm
 from webdriver_manager.chrome import ChromeDriverManager
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), os.pardir))
+)
+from utils.enums import DirName, FileName
 from utils.config_handler import load_config
 from utils.logger import logger
 from utils.misc import create_bucket_if_not_exists, upload_dir_to_s3
 
-CONFIG_PREFIX: Final = "config"
-CONFIG_FILENAME: Final = "config.yaml"
 
 MAX_NUM_REQUEST_PER_HOUR: Final = 50
 NUM_IMAGES_PER_PAGE: Final = 60
@@ -34,7 +39,7 @@ def download_unsplash_images(
     quotient, remainder = divmod(num_images, max_num_request_per_hour)
     total_downloaded = 0
 
-    for _ in range(quotient + 1):
+    for _ in tqdm(range(quotient + 1)):
         count = max_num_request_per_hour if _ < quotient else remainder
         if count <= 0:
             continue
@@ -42,7 +47,7 @@ def download_unsplash_images(
         photos = unsplash.photos(
             type_="random", count=count, featured=True, query=query
         )
-        for photo in photos.entries:
+        for photo in tqdm(photos.entries, leave=False):
             start_time = time.time()
             image_name = f"{data_source}_{photo.id}.jpg"
             response = requests.get(photo.link_download, allow_redirects=True)
@@ -67,15 +72,16 @@ def download_musinsa_images(
 ) -> None:
     options = webdriver.ChromeOptions()
     options.add_argument("--no-sandbox")
+    options.add_argument("--window-size=1420,1080")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=options
     )
 
     quotient, remainder = divmod(num_images, num_images_per_page)
     total_downloaded = 0
-
-    for i in range(quotient + 1):
+    for i in tqdm(range(quotient + 1)):
         url = (
             f"https://www.musinsa.com/mz/streetsnap?{get_filter(order_method, is_best)}p={i + 1}"
             if is_street_snap
@@ -85,19 +91,21 @@ def download_musinsa_images(
 
         count = num_images_per_page if i < quotient else remainder
         if count > 0:
-            for j in range(count):
-                driver.find_elements(by=By.CSS_SELECTOR, value=".articleImg")[j].click()
-                image_url = (
-                    driver.find_elements(by=By.CSS_SELECTOR, value=".lbox")[
-                        0
-                    ].get_attribute("href")
-                    if is_street_snap
-                    else driver.find_element(
-                        by=By.XPATH, value="//meta[@property='og:image']"
-                    ).get_attribute("content")
-                )
-
+            for j in tqdm(range(count), leave=False):
                 try:
+                    driver.find_elements(by=By.CSS_SELECTOR, value=".articleImg")[
+                        j
+                    ].click()
+                    image_url = (
+                        driver.find_elements(by=By.CSS_SELECTOR, value=".lbox")[
+                            0
+                        ].get_attribute("href")
+                        if is_street_snap
+                        else driver.find_element(
+                            by=By.XPATH, value="//meta[@property='og:image']"
+                        ).get_attribute("content")
+                    )
+
                     image_name = f"{data_source}_{image_url.split('/')[-1].split('.')[1].split('?')[-1]}.jpg"
                     urlretrieve(
                         image_url,
@@ -108,10 +116,10 @@ def download_musinsa_images(
                     )
 
                     total_downloaded += 1
-                    msg = f"The '{total_downloaded}' image, '{image_name}' has been downloaded."
+                    msg = f"The '{total_downloaded}' image (the '{j + 1}' image on page '{i + 1}'), '{image_name}' has been downloaded."
                     logger.info(msg)
 
-                except HTTPError:
+                except (HTTPError, IndexError):
                     msg = f"There was an error downloading the '{j + 1}' image on page '{i + 1}'."
                     logger.warning(msg)
 
@@ -142,7 +150,10 @@ if __name__ == "__main__":
 
     config_path = os.path.abspath(
         os.path.join(
-            os.path.dirname(__file__), os.pardir, CONFIG_PREFIX, CONFIG_FILENAME
+            os.path.dirname(__file__),
+            os.pardir,
+            DirName.CONFIGS.value,
+            FileName.CONFIG.value,
         )
     )
     config = load_config(config_path)

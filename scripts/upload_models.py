@@ -35,7 +35,7 @@ def find_latest_checkpoint(folder_path: str) -> Optional[str]:
     return f"checkpoint-{latest_checkpoint_number}"
 
 
-CONFIG_PREFIX = "config"
+CONFIG_PREFIX = "configs"
 CONFIG_FILENAME = "config.yaml"
 
 HF_MODEL_IDS = [

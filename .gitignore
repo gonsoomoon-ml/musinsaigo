@@ -210,7 +210,8 @@ output_directory/
 
 # Unneccessary files
 excl_files/
+logs/
 images/
 model.tar.gz
 models/
-config/config.yaml
+configs/config.yaml

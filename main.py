@@ -18,7 +18,7 @@ from utils.misc import (
 )
 
 
-CONFIG_PREFIX = "config"
+CONFIG_PREFIX = "configs"
 CONFIG_FILENAME = "config.yaml"
 CAPTIONS_PREFIX = "image_captions"
 

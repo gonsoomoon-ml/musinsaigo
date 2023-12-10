@@ -197,7 +197,8 @@ cython_debug/
 
 # Unneccessary files
 excl_files/
+logs/
 images/
 models/
-config/config.yaml
+configs/config.yaml
 
