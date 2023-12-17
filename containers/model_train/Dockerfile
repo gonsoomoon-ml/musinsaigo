@@ -24,7 +24,7 @@ ENV SCRIPT_ARGS ${SCRIPT_ARGS}
 ENV LAUNCH_ARGS ${LAUNCH_ARGS}
 ENV WANDB_API_KEY ${WANDB_API_KEY}
 
-COPY config/accelerate_config.yaml /opt/ml/code/accelerate_config.yaml
+COPY configs/accelerate_config.yaml /opt/ml/code/accelerate_config.yaml
 COPY containers/entrypoint.sh /opt/ml/code/entrypoint.sh
 COPY ${CODE_DIR}/${CODE_FILENAME} /opt/ml/code/${CODE_FILENAME}
 
