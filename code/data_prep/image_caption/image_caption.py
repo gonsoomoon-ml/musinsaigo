@@ -3,9 +3,9 @@ import glob
 import json
 import os
 import sys
-from typing import Optional
+from typing import Final, Optional
 import torch
-from accelerate import infer_auto_device_map, init_empty_weights  # noqa
+from accelerate import infer_auto_device_map, init_empty_weights
 from PIL import Image
 from transformers import (
     AutoConfig,
@@ -15,12 +15,12 @@ from transformers import (
 from tqdm import tqdm
 
 sys.path.append("/tmp")
+from utils.enums import HfModelId
 from utils.logger import logger
 from utils.misc import arg_as_bool, get_max_memory
 
 
-HF_MODEL_ID = "Salesforce/instructblip-vicuna-7b"
-MODEL_GEN_CONFIG = {
+MODEL_GEN_CONFIG: Final = {
     "max_length": 512,
     "min_length": 81,
     "do_sample": True,
@@ -58,7 +58,10 @@ def caption_images(
 
     os.makedirs(models_dir, exist_ok=True)
 
-    image_paths = sorted(glob.glob(os.path.join(images_dir, "*.png")))
+    image_paths = sorted(
+        glob.glob(os.path.join(images_dir, "*.jpg"))
+        + glob.glob(os.path.join(images_dir, "*.png"))
+    )
 
     prompt_prefix = f"{prompt_prefix} " if len(prompt_prefix) > 0 else prompt_prefix
     prompt_suffix = f" {prompt_suffix}" if len(prompt_suffix) > 0 else prompt_suffix
@@ -171,7 +174,7 @@ if __name__ == "__main__":
         args.base_dir,
         args.images_prefix,
         args.captions_prefix,
-        HF_MODEL_ID,
+        HfModelId.INSTRUCT_BLIP.value,
         args.caption_prompt,
         args.prompt_prefix,
         args.prompt_suffix,

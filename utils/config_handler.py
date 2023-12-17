@@ -1,6 +1,13 @@
+import os
+import sys
 from dataclasses import dataclass
 from typing import Any, Optional
 import yaml
+
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), os.pardir))
+)
 from utils.logger import logger
 
 
@@ -24,6 +31,7 @@ class Config:
     base_prefix: str
     dataset_prefix: str
     images_prefix: str
+    captions_prefix: str
     models_prefix: str
     unsplash_api_key: Optional[str]
     hf_token: Optional[str]
@@ -115,6 +123,7 @@ def load_config(config_path: str) -> Config:
             config["environment"]["s3_dataset_prefix"], "dataset"
         ),
         images_prefix=get_default(config["environment"]["s3_images_prefix"], "images"),
+        captions_prefix=get_default(config["environment"]["s3_captions_prefix"], "image_captions"),
         models_prefix=get_default(config["environment"]["s3_models_prefix"], "models"),
         unsplash_api_key=config["environment"]["unsplash_api_key"],
         hf_token=config["environment"]["hf_token"],

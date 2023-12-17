@@ -1,4 +1,5 @@
 import base64
+from enum import Enum
 from io import BytesIO
 from typing import Any, Dict, List
 import torch
@@ -6,23 +7,21 @@ from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
 from diffusers.models import AutoencoderKL
 
 
-HF_MODEL_IDS = [
-    "SG161222/Realistic_Vision_V5.1_noVAE",
-    "stabilityai/sd-vae-ft-mse",
-]
+class HfModelId(str, Enum):
+    SD_V1_5: str = "SG161222/Realistic_Vision_V5.1_noVAE"
+    SD_VAE: str = "stabilityai/sd-vae-ft-mse"
 
 
 def model_fn(model_dir: str) -> Any:
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = StableDiffusionPipeline.from_pretrained(
-        HF_MODEL_IDS[0], torch_dtype=torch.float16
+        HfModelId.SD_V1_5.value, torch_dtype=torch.float16
     ).to(device)
 
-    if len(HF_MODEL_IDS) > 1:
-        model.vae = AutoencoderKL.from_pretrained(
-            HF_MODEL_IDS[1], torch_dtype=torch.float16
-        ).to(device)
+    model.vae = AutoencoderKL.from_pretrained(
+        HfModelId.SD_VAE.value, torch_dtype=torch.float16
+    ).to(device)
 
     model.scheduler = EulerDiscreteScheduler.from_config(
         model.scheduler.config, use_karras_sigmas=True

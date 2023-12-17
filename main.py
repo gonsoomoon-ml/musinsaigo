@@ -1,11 +1,18 @@
 import os
+import sys
+from typing import Final
 import boto3
 import sagemaker
 from sagemaker.estimator import Estimator
 from sagemaker.huggingface import HuggingFaceModel
 from sagemaker.processing import ProcessingInput, ProcessingOutput
 from sagemaker.sklearn.processing import ScriptProcessor
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__))))
+)
 from utils.config_handler import Config, load_config
+from utils.enums import BaseJobName, DirName, FileName, HfModelId, Version
 from utils.logger import logger
 from utils.misc import (
     change_dict_to_cli_args,
@@ -18,23 +25,8 @@ from utils.misc import (
 )
 
 
-CONFIG_PREFIX = "configs"
-CONFIG_FILENAME = "config.yaml"
-CAPTIONS_PREFIX = "image_captions"
-
-HF_MODEL_IDS = [
-    "SG161222/Realistic_Vision_V5.1_noVAE",
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    "madebyollin/sdxl-vae-fp16-fix",
-]
-TRANSFORMERS_VERSION = "4.28.1"
-PYTORCH_VERSION = "2.0.0"
-PY_VERSION = "py310"
-
-BASE_JOB_NAMES = ["image-caption", "image-outpaint", "finetune"]
-PROC_BASE_DIR = "/opt/ml/processing"
-
-SKIP_DATA_PREP = True
+PROC_BASE_DIR: Final = "/opt/ml/processing"
+SKIP_DATA_PREP: Final = False
 
 
 def main(config: Config) -> None:
@@ -74,7 +66,11 @@ def main(config: Config) -> None:
     if config.model_data is None:
         if not SKIP_DATA_PREP:
             run_shell_script(
-                os.path.join("containers", "build_and_push.sh"),
+                os.path.abspath(
+                    os.path.join(
+                        os.path.dirname(__file__), "containers", "build_and_push.sh"
+                    )
+                ),
                 {
                     "REPOSITORY_NAME": config.data_prep_repo,
                     "AWS_PUBLIC_ACCOUNT": "763104351884",
@@ -94,7 +90,7 @@ def main(config: Config) -> None:
                 "--images-prefix",
                 config.images_prefix,
                 "--captions-prefix",
-                CAPTIONS_PREFIX,
+                config.captions_prefix,
             ]
             if len(config.prompt_prefix) > 0:
                 arguments.extend(["--prompt-prefix", config.prompt_prefix])
@@ -108,8 +104,8 @@ def main(config: Config) -> None:
                 instance_type=config.caption_instance_type,
                 instance_count=1,
                 command=["python3"],
-                max_runtime_in_seconds=259200,
-                base_job_name=BASE_JOB_NAMES[0],
+                max_runtime_in_seconds=432000,
+                base_job_name=BaseJobName.IMAGE_CAPTION.value,
                 sagemaker_session=sm_session,
             )
 
@@ -123,7 +119,7 @@ def main(config: Config) -> None:
                 ],
                 outputs=[
                     ProcessingOutput(
-                        source=f"{PROC_BASE_DIR}/{CAPTIONS_PREFIX}",
+                        source=f"{PROC_BASE_DIR}/{config.captions_prefix}",
                         destination=raw_dataset_uri,
                         output_name="image_captions",
                     )
@@ -133,7 +129,7 @@ def main(config: Config) -> None:
                 ),
                 arguments=arguments,
                 logs=True,
-                job_name=get_job_name(BASE_JOB_NAMES[0]),
+                job_name=get_job_name(BaseJobName.IMAGE_CAPTION.value),
             )
 
             if config.outpaint_images:
@@ -156,8 +152,8 @@ def main(config: Config) -> None:
                     instance_type=config.outpaint_instance_type,
                     instance_count=1,
                     command=["python3"],
-                    max_runtime_in_seconds=259200,
-                    base_job_name=BASE_JOB_NAMES[1],
+                    max_runtime_in_seconds=432000,
+                    base_job_name=BaseJobName.IMAGE_OUTPAINT.value,
                     sagemaker_session=sm_session,
                 )
 
@@ -181,7 +177,7 @@ def main(config: Config) -> None:
                     ),
                     arguments=arguments,
                     logs=True,
-                    job_name=get_job_name(BASE_JOB_NAMES[1]),
+                    job_name=get_job_name(BaseJobName.IMAGE_OUTPAINT.value),
                 )
 
         build_arg = f"--build-arg CODE_DIR={os.path.join('code', 'model_train', train_prefix)} \
@@ -192,9 +188,9 @@ def main(config: Config) -> None:
             /opt/ml/code/accelerate_config.yaml'"
 
         hyperparameters = {
-            "pretrained_model_name_or_path": HF_MODEL_IDS[1]
+            "pretrained_model_name_or_path": HfModelId.SDXL_V1_0_BASE.value
             if config.use_sdxl
-            else HF_MODEL_IDS[0],
+            else HfModelId.SD_V1_5.value,
             "dataloader_num_workers": 8,
             "resolution": min(config.resolution, 1024)
             if config.use_sdxl
@@ -239,7 +235,9 @@ def main(config: Config) -> None:
                 hyperparameters["use_8bit_adam"] = ""
 
             if config.use_sdxl:
-                hyperparameters["pretrained_vae_model_name_or_path"] = HF_MODEL_IDS[2]
+                hyperparameters[
+                    "pretrained_vae_model_name_or_path"
+                ] = HfModelId.SDXL_VAE.value
                 hyperparameters["mixed_precision"] = "fp16"
 
         if config.wandb_api_key:
@@ -272,12 +270,18 @@ def main(config: Config) -> None:
         )
 
         run_shell_script(
-            os.path.join("containers", "build_and_push.sh"),
+            os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "containers", "build_and_push.sh"
+                )
+            ),
             {
                 "REPOSITORY_NAME": config.model_train_repo,
                 "AWS_PUBLIC_ACCOUNT": "763104351884",
                 "DOCKERFILE_PATH": os.path.join(
-                    "containers", "model_train", "Dockerfile"
+                    "containers",
+                    "model_train",
+                    "Dockerfile",
                 ),
                 "BUILD_ARG": build_arg,
             },
@@ -294,7 +298,7 @@ def main(config: Config) -> None:
             instance_type=config.train_instance_type,
             max_run=259200,
             output_path=models_uri,
-            base_job_name=get_job_name(BASE_JOB_NAMES[2], prefix=train_prefix),
+            base_job_name=get_job_name(BaseJobName.FINETUNE.value, prefix=train_prefix),
             sagemaker_session=sm_session,
         )
 
@@ -320,9 +324,9 @@ def main(config: Config) -> None:
         model_data=model_data,
         role=role,
         entry_point="inference.py",
-        transformers_version=TRANSFORMERS_VERSION,
-        pytorch_version=PYTORCH_VERSION,
-        py_version=PY_VERSION,
+        transformers_version=Version.TRANSFORMERS.value,
+        pytorch_version=Version.PYTORCH.value,
+        py_version=Version.PYTHON.value,
         source_dir=os.path.join("code", "inference", infer_prefix),
         sagemaker_session=sm_session,
     )
@@ -342,7 +346,7 @@ def main(config: Config) -> None:
 if __name__ == "__main__":
     logger.info("The image generative model fine-tuning and deployment job started...")
 
-    config_path = os.path.join(CONFIG_PREFIX, CONFIG_FILENAME)
+    config_path = os.path.join(DirName.CONFIGS.value, FileName.CONFIG.value)
     config = load_config(config_path)
 
     main(config)

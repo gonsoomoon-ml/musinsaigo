@@ -3,7 +3,7 @@ import json
 import os
 import sys
 from shutil import copyfile
-from typing import Optional
+from typing import Final, Optional
 import numpy as np
 import torch
 from diffusers import StableDiffusionInpaintPipeline
@@ -11,12 +11,12 @@ from PIL import Image
 from tqdm import tqdm
 
 sys.path.append("/tmp")
+from utils.enums import HfModelId
 from utils.logger import logger
 from utils.misc import arg_as_bool
 
-HF_MODEL_ID = "runwayml/stable-diffusion-inpainting"
-MODEL_GEN_CONFIG = {
-    "num_inference_steps": 50,
+MODEL_GEN_CONFIG: Final = {
+    "num_inference_steps": 30,
     "guidance_scale": 7.5,
     "negative_prompt": "other people in the background",
     "seed": 42,
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         args.base_dir,
         args.dataset_prefix,
         args.images_prefix,
-        HF_MODEL_ID,
+        HfModelId.SD_INPAINT.value,
         args.outpaint_prompt,
         args.resolution,
         args.run_compile,

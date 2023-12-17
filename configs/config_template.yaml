@@ -6,6 +6,7 @@ environment:
   s3_base_prefix: musinsaigo
   s3_dataset_prefix: dataset
   s3_images_prefix: images
+  s3_captions_prefix: image_captions
   s3_models_prefix: models
   unsplash_api_key:
   hf_token:

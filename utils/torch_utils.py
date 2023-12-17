@@ -1,11 +1,11 @@
 import os
-from typing import Any
+from typing import Any, Final
 import torch
 from safetensors.torch import load_file, save_file
 
 
-LORA_PREFIX_TEXT_ENCODER = "lora_te"
-LORA_PREFIX_UNET = "lora_unet"
+LORA_PREFIX_TEXT_ENCODER: Final = "lora_te"
+LORA_PREFIX_UNET: Final = "lora_unet"
 
 
 def bin_to_safetensors(bin_path: str, safetensors_path: str) -> None:

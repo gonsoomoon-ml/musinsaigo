@@ -1,23 +1,25 @@
 import base64
+from enum import Enum
 from io import BytesIO
-from typing import Any, Dict, List
+from typing import Any, Dict, Final, List
 import torch
 from diffusers import DiffusionPipeline
 
 
-HF_MODEL_IDS = [
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    "stabilityai/stable-diffusion-xl-refiner-1.0",
-]
-ENABLE_MODEL_CPU_OFFLOAD = True
-USE_REFINER = False
+class HfModelId(str, Enum):
+    SDXL_V1_0_BASE: str = "stabilityai/stable-diffusion-xl-base-1.0"
+    SDXL_V1_0_REFINER: str = "stabilityai/stable-diffusion-xl-refiner-1.0"
+
+
+ENABLE_MODEL_CPU_OFFLOAD: Final = True
+USE_REFINER: Final = False
 
 
 def model_fn(model_dir: str) -> Dict[str, Any]:
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = DiffusionPipeline.from_pretrained(
-        HF_MODEL_IDS[0],
+        HfModelId.SDXL_V1_0_BASE.value,
         torch_dtype=torch.float16,
         variant="fp16",
     )
@@ -31,7 +33,7 @@ def model_fn(model_dir: str) -> Dict[str, Any]:
 
     if USE_REFINER:
         refiner = DiffusionPipeline.from_pretrained(
-            HF_MODEL_IDS[1],
+            HfModelId.SDXL_V1_0_REFINER.value,
             text_encoder_2=model.text_encoder_2,
             vae=model.vae,
             torch_dtype=torch.float16,
