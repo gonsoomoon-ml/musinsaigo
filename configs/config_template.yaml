@@ -8,6 +8,7 @@ environment:
   s3_images_prefix: images
   s3_captions_prefix: image_captions
   s3_models_prefix: models
+  pexels_api_key:
   unsplash_api_key:
   hf_token:
   wandb_api_key:
@@ -15,7 +16,7 @@ environment:
 data:
   data_source: musinsa
   num_images: 2000
-  data_query: fashion person
+  data_query: fashion model
   is_street_snap: True
   order_method:
   is_best: True

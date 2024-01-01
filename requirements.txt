@@ -1,6 +1,7 @@
 boto3==1.28.17
 diffusers==0.16.1
 matplotlib==3.7.1
+pexels-api==1.0.1
 pillow==9.4.0
 pyunsplash==1.0.0rc2
 pyyaml==6.0

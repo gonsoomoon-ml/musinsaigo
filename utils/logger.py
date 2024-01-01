@@ -20,9 +20,7 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 
 logs_dir = os.path.abspath(
-    os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),DirName.LOGS.value
-    )
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), DirName.LOGS.value)
 )
 os.makedirs(
     logs_dir,

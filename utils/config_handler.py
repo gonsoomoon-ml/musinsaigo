@@ -33,6 +33,7 @@ class Config:
     images_prefix: str
     captions_prefix: str
     models_prefix: str
+    pexels_api_key: Optional[str]
     unsplash_api_key: Optional[str]
     hf_token: Optional[str]
     wandb_api_key: Optional[str]
@@ -123,8 +124,11 @@ def load_config(config_path: str) -> Config:
             config["environment"]["s3_dataset_prefix"], "dataset"
         ),
         images_prefix=get_default(config["environment"]["s3_images_prefix"], "images"),
-        captions_prefix=get_default(config["environment"]["s3_captions_prefix"], "image_captions"),
+        captions_prefix=get_default(
+            config["environment"]["s3_captions_prefix"], "image_captions"
+        ),
         models_prefix=get_default(config["environment"]["s3_models_prefix"], "models"),
+        pexels_api_key=config["environment"]["pexels_api_key"],
         unsplash_api_key=config["environment"]["unsplash_api_key"],
         hf_token=config["environment"]["hf_token"],
         wandb_api_key=config["environment"]["wandb_api_key"],

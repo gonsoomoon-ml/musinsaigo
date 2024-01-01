@@ -1,16 +1,24 @@
 import os
 import re
+import sys
 from shutil import copyfile
-from typing import Optional
+from typing import Final, Optional
 import boto3
 import torch
 from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
 from diffusers.models import AutoencoderKL
 from huggingface_hub import create_repo, upload_folder
+
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(__file__)), os.pardir))
+)
 from utils.config_handler import load_config
+from utils.enums import DirName, FileName, HfModelId
 from utils.logger import logger
 from utils.misc import create_bucket_if_not_exists, decompress_file
 from utils.torch_utils import bin_to_safetensors, convert_lora_safetensor_to_diffusers
+
+CROSS_ATTENTION_SCALE: Final = 0.75
 
 
 def find_latest_checkpoint(folder_path: str) -> Optional[str]:
@@ -35,18 +43,15 @@ def find_latest_checkpoint(folder_path: str) -> Optional[str]:
     return f"checkpoint-{latest_checkpoint_number}"
 
 
-CONFIG_PREFIX = "configs"
-CONFIG_FILENAME = "config.yaml"
-
-HF_MODEL_IDS = [
-    "SG161222/Realistic_Vision_V5.1_noVAE",
-    "stabilityai/sd-vae-ft-mse",
-]
-CROSS_ATTENTION_SCALE = 0.75
-
-
 if __name__ == "__main__":
-    config_path = os.path.join("..", CONFIG_PREFIX, CONFIG_FILENAME)
+    config_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.pardir,
+            DirName.CONFIGS.value,
+            FileName.CONFIG.value,
+        )
+    )
     config = load_config(config_path)
 
     boto_session = boto3.Session(
@@ -59,8 +64,12 @@ if __name__ == "__main__":
         else config.bucket
     )
 
-    src_model_dir = os.path.join("..", config.models_prefix, "src")
-    tgt_model_dir = os.path.join("..", config.models_prefix, "tgt")
+    src_model_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, config.models_prefix, "src")
+    )
+    tgt_model_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, config.models_prefix, "tgt")
+    )
 
     os.makedirs(src_model_dir, exist_ok=True)
 
@@ -84,10 +93,10 @@ if __name__ == "__main__":
     bin_to_safetensors(bin_path, safetensors_path)
 
     model = StableDiffusionPipeline.from_pretrained(
-        HF_MODEL_IDS[0], torch_dtype=torch.float32
+        HfModelId.SD_V1_5.value, torch_dtype=torch.float32
     )
     model.vae = AutoencoderKL.from_pretrained(
-        HF_MODEL_IDS[1], torch_dtype=torch.float32
+        HfModelId.SD_VAE.value, torch_dtype=torch.float32
     )
     model.scheduler = model.scheduler = EulerDiscreteScheduler.from_config(
         model.scheduler.config, use_karras_sigmas=True
@@ -99,7 +108,9 @@ if __name__ == "__main__":
 
     model.save_pretrained(tgt_model_dir)
 
-    doc_path = os.path.join(".", "README.md")
+    doc_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.curdir, "README.md")
+    )
     if os.path.exists(doc_path):
         copyfile(doc_path, os.path.join(tgt_model_dir, "README.md"))
 
