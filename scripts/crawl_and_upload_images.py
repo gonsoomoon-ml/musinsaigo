@@ -75,7 +75,7 @@ def download_unsplash_images(
     query: str,
     num_images: int,
     images_dir: str,
-    featured: bool = True,
+    featured: bool = False,
     max_num_request_per_hour: int = 50,
 ) -> None:
     unsplash = PyUnsplash(api_key=api_key)
@@ -135,9 +135,9 @@ def download_google_images(
         except ElementNotInteractableException:
             pass
         time.sleep(1)
-        if (
-            driver.find_element(By.CLASS_NAME, "OuJzKb.Yu2Dnd").text
-            == "더 이상 표시할 콘텐츠가 없습니다."
+        if driver.find_element(By.CLASS_NAME, "OuJzKb.Yu2Dnd").text in (
+            "Looks like you've reached the end",
+            "더 이상 표시할 콘텐츠가 없습니다.",
         ):
             break
 
