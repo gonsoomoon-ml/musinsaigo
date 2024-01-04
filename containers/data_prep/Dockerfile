@@ -6,11 +6,10 @@ RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir \
     accelerate==0.25.0 \
     bitsandbytes==0.41.0 \
-    diffusers==0.24.0 \
-    pytorch==2.0.0 \
+    diffusers==0.25.0 \
     safetensors==0.4.1 \
     transformers==4.36.2 \
-    xformers==0.0.23.post1
+    xformers==0.0.19
 
 COPY ./utils/ /tmp/utils/
 

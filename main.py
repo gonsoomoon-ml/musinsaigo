@@ -26,7 +26,7 @@ from utils.misc import (
 
 
 PROC_BASE_DIR: Final = "/opt/ml/processing"
-SKIP_DATA_PREP: Final = False
+SKIP_DATA_PREP: Final = True
 
 
 def main(config: Config) -> None:
@@ -229,7 +229,7 @@ def main(config: Config) -> None:
         if config.reduce_memory_usage:
             hyperparameters["gradient_accumulation_steps"] = 4
             hyperparameters["gradient_checkpointing"] = ""
-            hyperparameters["enable_xformers_memory_efficient_attention"] = ""
+            # hyperparameters["enable_xformers_memory_efficient_attention"] = ""
 
             if not config.use_multi_gpus:
                 hyperparameters["use_8bit_adam"] = ""
