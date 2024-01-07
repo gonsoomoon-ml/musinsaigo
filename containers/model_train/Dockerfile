@@ -4,15 +4,16 @@ ENV PYTHONUNBUFFERED=TRUE
 
 RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir \
-    accelerate==0.25.0 \
-    bitsandbytes==0.41.0 \
-    deepspeed==0.12.6  \
+    accelerate>=0.25.0 \
+    bitsandbytes>=0.41.0 \
+    deepspeed>=0.12.6  \
     diffusers==0.25.0 \
     peft==0.7.1 \
-    safetensors==0.4.1 \
+    safetensors>=0.4.1 \
+    torch==2.0.0 \
     transformers==4.36.2 \
-    wandb==0.16.1 \
-    xformers==0.0.19
+    wandb>=0.16.1 \
+    xformers>=0.0.19
 
 ARG CODE_DIR
 ARG CODE_FILENAME

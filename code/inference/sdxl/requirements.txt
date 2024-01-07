@@ -1,4 +1,5 @@
-accelerate==0.25.0
+accelerate>=0.25.0
 diffusers==0.25.0
-safetensors==0.4.1
-xformers==0.0.19
+safetensors>=0.4.1
+torch==2.0.0
+xformers>=0.0.19

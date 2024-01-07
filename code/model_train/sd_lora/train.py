@@ -1,3 +1,4 @@
+# https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image_lora.py
 # coding=utf-8
 # Copyright 2023 The HuggingFace Inc. team. All rights reserved.
 #

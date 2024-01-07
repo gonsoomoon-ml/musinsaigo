@@ -219,9 +219,12 @@ def main(config: Config) -> None:
             hyperparameters[
                 "instance_prompt"
             ] = f"'a photo of {config.subject_name} {config.class_name}'"
-            hyperparameters["num_class_images"] = 200
+            hyperparameters["num_class_images"] = 150
             hyperparameters["with_prior_preservation"] = ""
             hyperparameters["class_prompt"] = f"'a photo of {config.class_name}'"
+
+        if config.use_sdxl:
+            hyperparameters["snr_gamma"] = 5.0
 
         if config.use_dreambooth or config.use_sdxl:
             hyperparameters["train_text_encoder"] = ""

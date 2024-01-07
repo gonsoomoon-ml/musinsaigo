@@ -1,3 +1,4 @@
+# https://github.com/huggingface/diffusers/blob/main/examples/text_to_image/train_text_to_image_lora_sdxl.py
 #!/usr/bin/env python
 # coding=utf-8
 # Copyright 2023 The HuggingFace Inc. team. All rights reserved.
@@ -233,13 +234,13 @@ def parse_args(input_args=None):
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="sd-model-finetuned-lora",
+        default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model"),  # newly added
         help="The output directory where the model predictions and checkpoints will be written.",
     )
     parser.add_argument(
         "--cache_dir",
         type=str,
-        default=os.environ.get("SM_MODEL_DIR", "/opt/ml/model"),  # newly added
+        default=None,
         help="The directory where the downloaded models and datasets will be stored.",
     )
     parser.add_argument(
