@@ -50,6 +50,7 @@ model:
   lr_scheduler: constant
   checkpointing_steps: 500
   push_to_hub: False
+  rank: 4
   hf_model_id:
   reduce_memory_usage: True
   validation_prompt: a photo of a woman wearing a white t-shirt and jeans
