@@ -21,12 +21,12 @@ from utils.misc import arg_as_bool, get_max_memory
 
 
 MODEL_GEN_CONFIG: Final = {
-    "max_length": 512,
-    "min_length": 81,
+    "max_length": 100,
+    "min_length": 25,
     "do_sample": True,
     "num_beams": 5,
-    "temperature": 1.0,
-    "top_p": 0.9,
+    "temperature": 0.2,
+    "top_p": 0.1,
     "repetition_penalty": 1.5,
     "length_penalty": 1.0,
 }

@@ -76,6 +76,7 @@ refiner = DiffusionPipeline.from_pretrained(
     vae=pipe.vae,
     torch_dtype=torch.float16,
 )
+refiner = refiner.to(device)
 
 image = pipe(
     prompt=make_prompt(PROMPT),

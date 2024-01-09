@@ -219,6 +219,33 @@ def log_or_print(msg: str, logger: Optional[logging.Logger] = None) -> None:
         print(msg)
 
 
+def list_s3_objects(
+    boto_session: boto3.Session, bucket_name: str, prefix: str
+) -> List[str]:
+    s3_client = boto_session.client("s3")
+    continuation_token = None
+
+    s3_objects = []
+    while True:
+        if continuation_token is not None:
+            response = s3_client.list_objects_v2(
+                Bucket=bucket_name, Prefix=prefix, ContinuationToken=continuation_token
+            )
+        else:
+            response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+        if "Contents" in response:
+            for obj in response["Contents"]:
+                s3_objects.append(obj["Key"])
+
+        if response["IsTruncated"]:
+            continuation_token = response["NextContinuationToken"]
+        else:
+            break
+
+    return s3_objects
+
+
 def make_ecr_uri(account_id: str, region_name: str, repo_name: str) -> str:
     return f"{account_id}.dkr.ecr.{region_name}.amazonaws.com/{repo_name}"
 
