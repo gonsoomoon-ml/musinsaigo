@@ -45,7 +45,7 @@ model:
   random_flip: True
   train_text_encoder: True
   batch_size: 1
-  max_train_steps: 2000
+  max_train_steps: 4000
   learning_rate: 1e-05
   lr_scheduler: constant
   checkpointing_steps: 500

@@ -202,6 +202,7 @@ def main(config: Config) -> None:
             "lr_warmup_steps": 0,
             "checkpointing_steps": config.checkpointing_steps,
             "seed": 42,
+            "rank": config.rank,
         }
 
         if config.num_train_epochs is None:

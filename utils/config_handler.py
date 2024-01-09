@@ -71,6 +71,7 @@ class Config:
     lr_scheduler: str
     checkpointing_steps: int
     push_to_hub: bool
+    rank: int
     hf_model_id: str
     reduce_memory_usage: bool
     validation_prompt: str
@@ -180,6 +181,7 @@ def load_config(config_path: str) -> Config:
         lr_scheduler=get_default(config["model"]["lr_scheduler"], "cosine"),
         checkpointing_steps=checkpointing_steps,
         push_to_hub=get_default(config["model"]["push_to_hub"], False),
+        rank=get_default(config["model"]["rank"], 4),
         hf_model_id=get_default(config["model"]["hf_model_id"], base_prefix),
         reduce_memory_usage=get_default(config["model"]["reduce_memory_usage"], False),
         validation_prompt=validation_prompt,
