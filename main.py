@@ -26,7 +26,7 @@ from utils.misc import (
 
 
 PROC_BASE_DIR: Final = "/opt/ml/processing"
-SKIP_DATA_PREP: Final = True
+SKIP_DATA_PREP: Final = False
 
 
 def main(config: Config) -> None:
