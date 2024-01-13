@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from shutil import copyfile
-from typing import Final, Optional
+from typing import Final
 import boto3
 import torch
 from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
@@ -21,7 +21,7 @@ from utils.torch_utils import bin_to_safetensors, convert_lora_safetensor_to_dif
 CROSS_ATTENTION_SCALE: Final = 0.75
 
 
-def find_latest_checkpoint(folder_path: str) -> Optional[str]:
+def find_latest_checkpoint(folder_path: str) -> str:
     entries = os.listdir(folder_path)
     checkpoint_folders = [
         entry
@@ -67,9 +67,6 @@ if __name__ == "__main__":
     src_model_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.pardir, config.models_prefix, "src")
     )
-    tgt_model_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), os.pardir, config.models_prefix, "tgt")
-    )
 
     os.makedirs(src_model_dir, exist_ok=True)
 
@@ -81,32 +78,47 @@ if __name__ == "__main__":
         zip_file_path,
     )
     decompress_file(zip_file_path, src_model_dir, compression="tar")
+    os.remove(zip_file_path)
 
-    bin_path = os.path.join(src_model_dir, "pytorch_lora_weights.bin")
-    if not os.path.exists(bin_path):
-        bin_path = os.path.join(
-            src_model_dir, find_latest_checkpoint(src_model_dir), "pytorch_model.bin"
+    if config.use_sdxl:
+        tgt_model_dir = src_model_dir
+
+    else:
+        tgt_model_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), os.pardir, config.models_prefix, "tgt"
+            )
         )
 
-    safetensors_path = os.path.join(src_model_dir, "pytorch_lora_weights.safetensors")
+        bin_path = os.path.join(src_model_dir, "pytorch_lora_weights.bin")
+        if not os.path.exists(bin_path):
+            bin_path = os.path.join(
+                src_model_dir,
+                find_latest_checkpoint(src_model_dir),
+                "pytorch_model.bin",
+            )
 
-    bin_to_safetensors(bin_path, safetensors_path)
+        safetensors_path = os.path.join(
+            src_model_dir, "pytorch_lora_weights.safetensors"
+        )
 
-    model = StableDiffusionPipeline.from_pretrained(
-        HfModelId.SD_V1_5.value, torch_dtype=torch.float32
-    )
-    model.vae = AutoencoderKL.from_pretrained(
-        HfModelId.SD_VAE.value, torch_dtype=torch.float32
-    )
-    model.scheduler = model.scheduler = EulerDiscreteScheduler.from_config(
-        model.scheduler.config, use_karras_sigmas=True
-    )
+        bin_to_safetensors(bin_path, safetensors_path)
 
-    model = convert_lora_safetensor_to_diffusers(
-        model, src_model_dir, cross_attention_scale=CROSS_ATTENTION_SCALE
-    )
+        model = StableDiffusionPipeline.from_pretrained(
+            HfModelId.SD_V1_5.value, torch_dtype=torch.float32
+        )
+        model.vae = AutoencoderKL.from_pretrained(
+            HfModelId.SD_VAE.value, torch_dtype=torch.float32
+        )
+        model.scheduler = model.scheduler = EulerDiscreteScheduler.from_config(
+            model.scheduler.config, use_karras_sigmas=True
+        )
 
-    model.save_pretrained(tgt_model_dir)
+        model = convert_lora_safetensor_to_diffusers(
+            model, src_model_dir, cross_attention_scale=CROSS_ATTENTION_SCALE
+        )
+
+        model.save_pretrained(tgt_model_dir)
 
     doc_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.curdir, "README.md")
@@ -125,7 +137,7 @@ if __name__ == "__main__":
         folder_path=tgt_model_dir,
         commit_message="End of training",
         token=config.hf_token,
-        create_pr=True,
+        create_pr=False,
         ignore_patterns=["step_*", "epoch_*"],
     )
 
