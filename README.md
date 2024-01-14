@@ -1,11 +1,11 @@
 # MUSINSA-IGO (MUSINSA fashion Image Generative Operator)
 - - -
-## MUSINSA-IGO 2.0 is a text-to-image generative model that fine-tuned [*Stable Diffusion XL 1.0*](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0) with LoRA using street snaps downloaded from the website of [Musinsa](https://www.musinsa.com/app/), a Korean fashion commerce company. This is very useful for generating fashion images.
+## MUSINSA-IGO 3.0 is a text-to-image generative model that fine-tuned [*Stable Diffusion XL 1.0*](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0) with LoRA using street snaps downloaded from the website of [Musinsa](https://www.musinsa.com/app/), a Korean fashion commerce company. This is very useful for generating fashion images.
 
 ### Examples
 - - -
-![assets-01](assets/assets-01.png)
-![assets-02](assets/assets-02.png)
+![assets-01](assets/assets-07.png)
+![assets-02](assets/assets-08.png)
 ### Notes
 - - -
 * For example, the recommended prompt template is shown below.  
@@ -14,7 +14,7 @@
   
 **Negative Prompt**: (deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, the worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck
 
-* The model is available in [this *Huggingface Hub* repository](https://huggingface.co/youngmki/musinsaigo-2.0).
+* The model is available in [this *Huggingface Hub* repository](https://huggingface.co/aldente0630/musinsaigo-3.0).
 
 * It is recommended to apply a cross-attention scale of 0.5 to 0.75 and use a refiner.
 
@@ -47,7 +47,7 @@ def make_negative_prompt(negative_prompt: str) -> str:
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-model_id = "youngmki/musinsaigo-2.0"
+model_id = "aldente0630/musinsaigo-3.0"
 pipe = DiffusionPipeline.from_pretrained(
     "stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16
 )
@@ -97,7 +97,7 @@ generated_images = refiner(
 
 image.save("test.png")
 ```
-![test](assets/test-01.png)
+![test](assets/test-03.png)
 
 ### References
 

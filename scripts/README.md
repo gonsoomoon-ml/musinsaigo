@@ -28,7 +28,7 @@ inference: false
   
 **Negative Prompt**: (deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, the worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck
 
-* The source code is available in [this *GitHub* repository](https://github.com/youngmki/musinsaigo).
+* The source code is available in [this *GitHub* repository](https://github.com/aldente0630/musinsaigo).
 
 ### Usage
 - - -
@@ -58,7 +58,7 @@ def make_negative_prompt(negative_prompt: str) -> str:
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-model_id = "youngmki/musinsaigo-1.0"
+model_id = "aldente0630/musinsaigo-1.0"
 pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
 pipe = pipe.to(device)
 

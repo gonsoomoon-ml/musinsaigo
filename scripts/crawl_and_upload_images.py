@@ -165,7 +165,9 @@ def download_google_images(
             response = requests.get(image_url, stream=True)
             image = Image.open(io.BytesIO(response.content))
             image_width, image_height = image.size
-            if image_width >= min_image_size or image_height >= min_image_size:
+            if (
+                image_width >= min_image_size or image_height >= min_image_size
+            ) and max(image_width, image_height) / min(image_width, image_height) <= 2.0:
                 total_downloaded += 1
                 image_name = f"google_{image_url.split('/')[-1].split('.')[0].split('?')[0][:MAX_NAME_LEN]}.jpg"
                 with open(os.path.join(images_dir, image_name), "wb") as file:
