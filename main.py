@@ -27,6 +27,7 @@ from utils.misc import (
 
 PROC_BASE_DIR: Final = "/opt/ml/processing"
 SKIP_DATA_PREP: Final = True
+# SKIP_DATA_PREP: Final = False
 
 
 def main(config: Config) -> None:
@@ -41,44 +42,55 @@ def main(config: Config) -> None:
         if config.role is None
         else config.role
     )
+    logger.info("## role: %s", role)
+
     bucket = (
         create_bucket_if_not_exists(boto_session, config.region_name, logger=logger)
         if config.bucket is None
         else config.bucket
     )
+    logger.info("## bucket: %s", bucket)    
 
     raw_dataset_uri = make_s3_uri(
         bucket, f"{config.base_prefix}/raw_{config.dataset_prefix}"
     )
+    logger.info("## raw_dataset_uri: %s", raw_dataset_uri)
+
     proc_dataset_uri = make_s3_uri(
         bucket, f"{config.base_prefix}/proc_{config.dataset_prefix}"
     )
+    logger.info("## proc_dataset_uri: %s", proc_dataset_uri)    
+
     dataset_uri = proc_dataset_uri if config.outpaint_images else raw_dataset_uri
+    logger.info("## dataset_uri: %s", dataset_uri)
+
     models_uri = make_s3_uri(bucket, f"{config.base_prefix}/{config.models_prefix}")
+    logger.info("## models_uri: %s", models_uri)
 
     if config.use_dreambooth:
         train_prefix = "sdxl_dreambooth" if config.use_sdxl else "sd_dreambooth"
     else:
         train_prefix = "sdxl_lora" if config.use_sdxl else "sd_lora"
 
+
     infer_prefix = "sdxl" if config.use_sdxl else "sd"
 
     if config.model_data is None:
         if not SKIP_DATA_PREP:
-            run_shell_script(
-                os.path.abspath(
-                    os.path.join(
-                        os.path.dirname(__file__), "containers", "build_and_push.sh"
-                    )
-                ),
-                {
-                    "REPOSITORY_NAME": config.data_prep_repo,
-                    "AWS_PUBLIC_ACCOUNT": "763104351884",
-                    "DOCKERFILE_PATH": os.path.join(
-                        "containers", "data_prep", "Dockerfile"
-                    ),
-                },
-            )
+            # run_shell_script(
+            #     os.path.abspath(
+            #         os.path.join(
+            #             os.path.dirname(__file__), "containers", "build_and_push.sh"
+            #         )
+            #     ),
+            #     {
+            #         "REPOSITORY_NAME": config.data_prep_repo,
+            #         "AWS_PUBLIC_ACCOUNT": "763104351884",
+            #         "DOCKERFILE_PATH": os.path.join(
+            #             "containers", "data_prep", "Dockerfile"
+            #         ),
+            #     },
+            # )
 
             data_prep_image_uri = make_ecr_uri(
                 account_id, config.region_name, config.data_prep_repo
@@ -272,38 +284,49 @@ def main(config: Config) -> None:
         build_arg += (
             f' --build-arg SCRIPT_ARGS="{change_dict_to_cli_args(hyperparameters)}"'
         )
+        logger.info("## build_arg: %s", build_arg)
 
-        run_shell_script(
-            os.path.abspath(
-                os.path.join(
-                    os.path.dirname(__file__), "containers", "build_and_push.sh"
-                )
-            ),
-            {
-                "REPOSITORY_NAME": config.model_train_repo,
-                "AWS_PUBLIC_ACCOUNT": "763104351884",
-                "DOCKERFILE_PATH": os.path.join(
-                    "containers",
-                    "model_train",
-                    "Dockerfile",
-                ),
-                "BUILD_ARG": build_arg,
-            },
-        )
+        # run_shell_script(
+        #     os.path.abspath(
+        #         os.path.join(
+        #             os.path.dirname(__file__), "containers", "build_and_push.sh"
+        #         )
+        #     ),
+        #     {
+        #         "REPOSITORY_NAME": config.model_train_repo,
+        #         "AWS_PUBLIC_ACCOUNT": "763104351884",
+        #         "DOCKERFILE_PATH": os.path.join(
+        #             "containers",
+        #             "model_train",
+        #             "Dockerfile",
+        #         ),
+        #         "BUILD_ARG": build_arg,
+        #     },
+        # )
 
         model_train_image_uri = make_ecr_uri(
             account_id, config.region_name, config.model_train_repo
         )
+
+    ########################################################
+    # 로컬 모드 설정
+    ########################################################
+        # boto_session = boto3.Session(region_name=config.region_name)
+        # sm_session = sagemaker.LocalSession(boto_session=boto_session)  # boto_session 전달
+        # sm_session.config = {'local': {'local_code': True}}
+    ########################################################        
 
         estimator = Estimator(
             image_uri=model_train_image_uri,
             role=role,
             instance_count=1,
             instance_type=config.train_instance_type,
+            # instance_type="local_gpu",  # Local mode용 인스턴스 타입
             max_run=259200,
             output_path=models_uri,
             base_job_name=get_job_name(BaseJobName.FINETUNE.value, prefix=train_prefix),
-            sagemaker_session=sm_session,
+            sagemaker_session = sm_session,
+            # keep_alive_period_in_seconds=3600,
         )
 
         _ = estimator.fit(
@@ -324,27 +347,27 @@ def main(config: Config) -> None:
             filename="model.tar.gz",
         )
 
-    model = HuggingFaceModel(
-        model_data=model_data,
-        role=role,
-        entry_point="inference.py",
-        transformers_version=Version.TRANSFORMERS.value,
-        pytorch_version=Version.PYTORCH.value,
-        py_version=Version.PYTHON.value,
-        source_dir=os.path.join("code", "inference", infer_prefix),
-        sagemaker_session=sm_session,
-    )
+    # model = HuggingFaceModel(
+    #     model_data=model_data,
+    #     role=role,
+    #     entry_point="inference.py",
+    #     transformers_version=Version.TRANSFORMERS.value,
+    #     pytorch_version=Version.PYTORCH.value,
+    #     py_version=Version.PYTHON.value,
+    #     source_dir=os.path.join("code", "inference", infer_prefix),
+    #     sagemaker_session=sm_session,
+    # )
 
-    _ = model.deploy(
-        initial_instance_count=1,
-        instance_type=config.infer_instance_type,
-        endpoint_name=config.endpoint_name,
-    )
+    # _ = model.deploy(
+    #     initial_instance_count=1,
+    #     instance_type=config.infer_instance_type,
+    #     endpoint_name=config.endpoint_name,
+    # )
 
-    logger.info(
-        "Fine-tuning the image generative model and deploying an endpoint to %s is complete.",
-        config.endpoint_name,
-    )
+    # logger.info(
+    #     "Fine-tuning the image generative model and deploying an endpoint to %s is complete.",
+    #     config.endpoint_name,
+    # )
 
 
 if __name__ == "__main__":
@@ -353,7 +376,12 @@ if __name__ == "__main__":
     config_path = os.path.join(DirName.CONFIGS.value, FileName.CONFIG.value)
     config = load_config(config_path)
 
+    logger.info(
+        "## config: %s", config
+    )
+
     main(config)
+
 
     logger.info(
         "The image generative model fine-tuning and deployment job ended successfully."

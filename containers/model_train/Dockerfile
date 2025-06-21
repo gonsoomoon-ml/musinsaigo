@@ -2,16 +2,9 @@ FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/huggingface-pytorch-training:2
 
 ENV PYTHONUNBUFFERED=TRUE
 
-RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir \
-    accelerate>=0.25.0 \
-    bitsandbytes>=0.41.0 \
-    deepspeed>=0.12.6  \
-    diffusers==0.25.0 \
+# diffusers 없이 필요한 패키지만 추가
+RUN pip3 install --no-cache-dir \
     peft==0.7.1 \
-    safetensors>=0.4.1 \
-    torch==2.0.0 \
-    transformers==4.36.2 \
     wandb>=0.16.1 \
     xformers>=0.0.19
 
@@ -27,6 +20,7 @@ ENV LAUNCH_ARGS ${LAUNCH_ARGS}
 ENV WANDB_API_KEY ${WANDB_API_KEY}
 
 COPY configs/accelerate_config.yaml /opt/ml/code/accelerate_config.yaml
+COPY configs/config.yaml /opt/ml/code/configs/config.yaml
 COPY containers/entrypoint.sh /opt/ml/code/entrypoint.sh
 COPY ${CODE_DIR}/${CODE_FILENAME} /opt/ml/code/${CODE_FILENAME}
 
