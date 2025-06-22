@@ -27,7 +27,7 @@ export VirtualEnv=$argument
 # Create conda virtual env.
 #####################################
 # conda create -y --prefix ./$VirtualEnv python=3.10.14
-conda create -y -n $VirtualEnv python=3.10.14
+conda create -y -n $VirtualEnv python=3.10
 
 # wait for  seconds
 echo "# Wait for 5 seconds to proceed with next step"

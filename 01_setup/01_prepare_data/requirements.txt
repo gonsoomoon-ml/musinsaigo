@@ -1,0 +1,27 @@
+# Core ML Libraries - 호환성 확인된 버전 (정상 동작)
+torch==2.0.0+cu117
+torchvision==0.15.0+cu117
+transformers==4.36.2
+diffusers==0.25.0
+accelerate==0.25.0
+
+# Optimization Libraries
+xformers==0.0.19
+triton==2.0.0
+safetensors==0.4.1
+
+# Additional Dependencies
+huggingface-hub==0.19.4
+tokenizers==0.15.0
+matplotlib==3.7.2
+Pillow>=9.0.0
+numpy==1.26.4
+tqdm>=4.64.0
+
+# Image Processing
+opencv-python>=4.8.0
+
+boto3>=1.34.0
+botocore>=1.34.0
+pathlib2>=2.3.7
+typing-extensions>=4.0.0 
